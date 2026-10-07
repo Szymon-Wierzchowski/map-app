@@ -69,6 +69,8 @@ import kotlin.math.floor
 // Offline packs hold zooms 14..16, so the closest step enlarges zoom 16.
 private val ZOOM_STEPS = listOf(14 to 1f, 15 to 1f, 16 to 1f, 16 to 2f)
 
+private const val FAR_FROM_ROUTE_M = 50_000.0
+
 private val ROUTE_COLOR = Color(0xFF1565C0)
 private val NEXT_COLOR = Color(0xFFEF6C00)
 private val DONE_COLOR = Color(0xFF9E9E9E)
@@ -93,8 +95,12 @@ fun MapScreen(onMenu: () -> Unit) {
 
     val next = route.nextStop
     val anchor = next ?: route.stops.firstOrNull()
-    // Follow my position; before the first fix show the next stop (or Poland when there is no route).
-    val home = fix?.let { Geo.mercX(it.lon) to Geo.mercY(it.lat) }
+    // Follow my position. Before the first fix, or when the route is somewhere else entirely
+    // (planning a trip from home), show the next stop instead: that is where the offline map is.
+    val here = fix?.takeIf { f ->
+        route.stops.isEmpty() || route.stops.any { Geo.distanceM(f.lat, f.lon, it.lat, it.lon) < FAR_FROM_ROUTE_M }
+    }
+    val home = here?.let { Geo.mercX(it.lon) to Geo.mercY(it.lat) }
         ?: anchor?.let { Geo.mercX(it.lon) to Geo.mercY(it.lat) }
         ?: (Geo.mercX(19.4) to Geo.mercY(52.1))
     val center = if (follow) home else panX to panY
