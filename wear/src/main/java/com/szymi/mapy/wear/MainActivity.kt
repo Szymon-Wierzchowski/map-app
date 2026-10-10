@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
 private sealed interface Screen {
     data object Map : Screen
     data object Stops : Screen
+    data object Close : Screen
     data class Actions(val stopId: String) : Screen
 }
 
@@ -113,7 +114,7 @@ private fun WearApp(onExit: () -> Unit) {
     val back = { screen = if (screen is Screen.Actions) Screen.Stops else Screen.Map }
 
     when (val current = screen) {
-        Screen.Map -> MapScreen(onMenu = { screen = Screen.Stops })
+        Screen.Map -> MapScreen(onMenu = { screen = Screen.Stops }, onClose = { screen = Screen.Close })
         else -> {
             BackHandler(onBack = back)
             // The map needs sideways drags for panning, so only the menus are swipe-dismissable.
@@ -126,6 +127,19 @@ private fun WearApp(onExit: () -> Unit) {
                     if (!isBackground) {
                         if (current is Screen.Actions) {
                             StopActionsScreen(current.stopId, onDone = { screen = Screen.Stops })
+                        } else if (current is Screen.Close) {
+                            // Asked for separately so a stray touch on the map can't end tracking.
+                            Column(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 20.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text("Wyłączyć mapy i GPS?", textAlign = TextAlign.Center)
+                                MenuChip("Wyłącz", primary = true, onClick = onExit)
+                                MenuChip("Wróć", onClick = back)
+                            }
                         } else {
                             StopsScreen(
                                 onStop = { screen = Screen.Actions(it) },

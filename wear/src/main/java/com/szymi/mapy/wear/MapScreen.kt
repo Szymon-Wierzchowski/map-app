@@ -77,7 +77,7 @@ private val DONE_COLOR = Color(0xFF9E9E9E)
 private val ME_COLOR = Color(0xFF2979FF)
 
 @Composable
-fun MapScreen(onMenu: () -> Unit) {
+fun MapScreen(onMenu: () -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
     val route by WatchState.route.collectAsState()
@@ -245,6 +245,7 @@ fun MapScreen(onMenu: () -> Unit) {
         if (!follow) {
             MapButton("◎", Modifier.align(Alignment.CenterStart).padding(start = 6.dp)) { follow = true }
         }
+        MapButton("✕", Modifier.align(Alignment.CenterEnd).padding(end = 6.dp), onClick = onClose)
         Row(
             Modifier
                 .align(Alignment.BottomCenter)
